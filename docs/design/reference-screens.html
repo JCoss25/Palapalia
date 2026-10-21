@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Quinta — referencia móvil</title>
+<!-- Favicon vacío: el board es un artefacto local y no debe generar un 404 en consola -->
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bone:#EFEBDF; --paper:#FBFAF6; --ink:#15201B; --ink2:#5D6660;
+    --sea:#0E5F52; --sea-deep:#0A3B34; --line:rgba(21,32,27,.14);
+    --amber:#B4771F; --sand:#E3DCCB;
+    --serif:"Fraunces",Georgia,serif; --sans:"Inter",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{background:var(--bone); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased}
+  .board{width:1440px; padding:56px 64px 72px}
+  .board-head{display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:40px}
+  .board-head h1{font-family:var(--serif); font-weight:600; font-size:32px; letter-spacing:-.02em}
+  .board-head p{font-size:13px; color:var(--ink2); max-width:560px; line-height:1.5}
+  .grid{display:grid; grid-template-columns:repeat(3,390px); gap:44px 48px; justify-content:space-between}
+  .frame{width:390px; height:844px; background:#0d1210; border-radius:44px; padding:9px; box-shadow:0 18px 44px rgba(21,32,27,.16)}
+  .screen{position:relative; width:100%; height:100%; background:var(--paper); border-radius:36px; overflow:hidden; display:flex; flex-direction:column}
+  .shot{position:relative; background:var(--paper); overflow:hidden}
+  .status{height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 26px; font-size:12px; font-weight:600; letter-spacing:.01em; flex:0 0 auto; position:relative; z-index:6}
+  .status .dots{letter-spacing:2px; font-size:10px}
+  .home-ind{position:absolute; bottom:7px; left:50%; transform:translateX(-50%); width:126px; height:4px; border-radius:99px; background:rgba(21,32,27,.28); z-index:8}
+  .label{margin-top:14px; display:flex; gap:12px; align-items:baseline}
+  .label b{font-size:13px; font-weight:600}
+  .label span{font-size:12px; color:var(--ink2)}
+  .caption{font-size:11px; color:var(--ink2); margin-top:6px; line-height:1.45; max-width:390px}
+
+  /* shared atoms */
+  .pad{padding:0 20px}
+  .eyebrow{font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; color:var(--ink2)}
+  .display{font-family:var(--serif); font-weight:600; letter-spacing:-.022em; line-height:.98}
+  .btn{display:flex; align-items:center; justify-content:center; gap:8px; background:var(--sea); color:#fff; font-size:15px; font-weight:600; height:52px; border-radius:4px; width:100%}
+  .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--line)}
+  .tabbar{flex:0 0 auto; height:76px; border-top:1px solid var(--line); display:flex; padding:10px 8px 0; background:var(--paper); position:relative; z-index:5}
+  .tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; font-size:10px; color:var(--ink2); font-weight:500}
+  .tab.on{color:var(--sea)}
+  .ic{width:21px; height:21px; display:block}
+  .chip{display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 14px; border-radius:999px; border:1px solid var(--line); font-size:13px; font-weight:500; color:var(--ink); background:transparent; white-space:nowrap}
+  .chip.on{background:var(--ink); color:var(--bone); border-color:var(--ink)}
+  .rule{height:1px; background:var(--line)}
+
+  /* 1 onboarding */
+  .s1{background:#0b1713}
+  .s1 .status{color:#F2EFE6}
+  .s1 .hero{position:absolute; inset:0; z-index:0}
+  .s1 .hero img{width:100%; height:100%; object-fit:cover; object-position:52% 62%; filter:saturate(.86) contrast(1.02)}
+  .s1 .scrim{position:absolute; inset:0; z-index:1; background:linear-gradient(to top, rgba(7,20,16,.94) 34%, rgba(7,20,16,.55) 55%, rgba(7,20,16,.06) 78%)}
+  .s1 .content{position:relative; z-index:3; margin-top:auto; padding:0 24px 30px; color:#F6F3E9}
+  .s1 .mark{position:absolute; top:52px; left:24px; z-index:4; display:flex; align-items:center; gap:9px; color:#F6F3E9}
+  .s1 .mark .g{width:22px; height:22px}
+  .s1 .mark b{font-family:var(--serif); font-weight:600; font-size:19px; letter-spacing:-.01em}
+  .s1 h2{font-size:46px; color:#F7F4EA; margin-bottom:16px}
+  .s1 p{font-size:15px; line-height:1.5; color:rgba(247,244,234,.82); max-width:300px; margin-bottom:26px}
+  .s1 .btn{background:#F2EFE6; color:#14201B}
+  .s1 .skip{text-align:center; font-size:13px; color:rgba(247,244,234,.6); margin-top:16px}
+  .s1 .pager{display:flex; gap:6px; margin-bottom:22px}
+  .s1 .pager i{width:22px; height:3px; background:rgba(247,244,234,.3); border-radius:99px}
+  .s1 .pager i:first-child{background:#F2EFE6; width:34px}
+
+  /* 2 home */
+  .s2 .top{padding:6px 20px 10px}
+  .s2 .row1{display:flex; justify-content:space-between; align-items:flex-start}
+  .s2 .place{font-size:12px; color:var(--ink2); display:flex; align-items:center; gap:5px; margin-bottom:2px}
+  .s2 .row1 h2{font-size:28px; line-height:1.04}
+  .s2 .avatar{width:36px; height:36px; border-radius:999px; background:var(--sand); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#3E4A43; border:1px solid var(--line)}
+  .s2 .search{margin-top:16px; display:flex; align-items:center; gap:10px; height:50px; padding:0 14px; border-radius:4px; background:#fff; border:1px solid var(--line)}
+  .s2 .search span{font-size:14px; color:var(--ink2)}
+  .s2 .search .go{margin-left:auto; width:32px; height:32px; border-radius:3px; background:var(--sea); display:flex; align-items:center; justify-content:center}
+  .s2 .dates{display:flex; gap:8px; overflow:hidden; padding:14px 20px 4px}
+  .s2 .d{min-width:56px; height:68px; border:1px solid var(--line); border-radius:3px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:#fff}
+  .s2 .d b{font-size:16px; font-weight:600}
+  .s2 .d small{font-size:10px; color:var(--ink2); text-transform:uppercase; letter-spacing:.06em}
+  .s2 .d.on{background:var(--sea); border-color:var(--sea); color:#fff}
+  .s2 .d.on small{color:rgba(255,255,255,.72)}
+  .s2 .filters{display:flex; gap:8px; padding:14px 20px 12px; overflow:hidden}
+  .s2 .list{overflow:hidden; flex:1; min-height:0; padding:0 20px}
+  .s2 .vcard{margin-bottom:18px}
+  .s2 .sect{display:flex; justify-content:space-between; align-items:baseline; margin:2px 0 8px}
+  .s2 .sect h4{font-size:14px; font-weight:600}
+  .s2 .sect span{font-size:11px; color:var(--sea); font-weight:600}
+  .s2 .rowcard{display:flex; gap:11px; align-items:center; padding:10px 0; border-top:1px solid var(--line)}
+  .s2 .rowcard img{width:70px; height:70px; object-fit:cover; border-radius:2px; flex:0 0 70px}
+  .s2 .rowcard .t{flex:1}
+  .s2 .rowcard h5{font-size:14px; font-weight:600; margin-bottom:3px}
+  .s2 .rowcard p{font-size:11px; color:var(--ink2); line-height:1.45}
+  .s2 .rowcard .pr{font-size:13px; font-weight:600; text-align:right}
+  .s2 .rowcard .pr small{display:block; font-size:10px; color:var(--ink2); font-weight:400}
+  .s2 .all{display:block; text-align:center; font-size:12px; font-weight:600; color:var(--sea); padding:12px 0 6px; border-top:1px solid var(--line)}
+  .s2 .media{position:relative; height:186px; border-radius:2px; overflow:hidden; background:#DAD3C1}
+  .s2 .media img{width:100%; height:100%; object-fit:cover}
+  .s2 .tag{position:absolute; top:10px; left:10px; background:rgba(251,250,246,.94); color:var(--ink); font-size:11px; font-weight:600; padding:6px 9px; border-radius:2px; letter-spacing:.01em}
+  .s2 .tag.sp{background:rgba(14,95,82,.94); color:#fff}
+  .s2 .fav{position:absolute; top:10px; right:10px; width:30px; height:30px; border-radius:999px; background:rgba(251,250,246,.9); display:flex; align-items:center; justify-content:center}
+  .s2 .vinfo{display:flex; justify-content:space-between; gap:10px; padding-top:10px}
+  .s2 .vinfo h3{font-size:16px; font-weight:600; letter-spacing:-.01em}
+  .s2 .meta{font-size:12px; color:var(--ink2); margin-top:3px}
+  .s2 .score{display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600}
+  .s2 .price{text-align:right; font-size:12px; color:var(--ink2)}
+  .s2 .price b{display:block; font-size:16px; color:var(--ink); font-weight:600; letter-spacing:-.01em}
+  .s2 .avail{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--sea); margin-top:6px; font-weight:600}
+
+  /* 3 detail */
+  .s3{background:var(--paper)}
+  .s3 .cover{position:relative; height:318px; flex:0 0 auto; background:#D9D2C0}
+  .s3 .cover img{width:100%; height:100%; object-fit:cover}
+  .s3 .cover .scrim{position:absolute; inset:0; background:linear-gradient(to bottom, rgba(10,20,16,.4), rgba(10,20,16,0) 38%)}
+  .s3 .back{position:absolute; top:14px; left:16px; width:36px; height:36px; border-radius:999px; background:rgba(251,250,246,.94); display:flex; align-items:center; justify-content:center; z-index:3}
+  .s3 .count{position:absolute; right:16px; bottom:14px; background:rgba(15,25,20,.72); color:#fff; font-size:11px; padding:6px 10px; border-radius:2px; z-index:3}
+  .s3 .body{flex:1; margin-top:-18px; background:var(--paper); border-radius:16px 16px 0 0; position:relative; z-index:2; padding:20px 20px 92px; overflow:hidden}
+  .s3 .kicker{display:flex; gap:8px; align-items:center; font-size:12px; color:var(--ink2); margin-bottom:8px}
+  .s3 .kicker b{color:var(--sea); font-weight:600}
+  .s3 h2{font-size:32px; margin-bottom:8px}
+  .s3 .sub{font-size:13px; color:var(--ink2); display:flex; align-items:center; gap:6px}
+  .s3 .facts{display:flex; gap:0; margin:18px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+  .s3 .fact{flex:1; padding:12px 0; border-right:1px solid var(--line)}
+  .s3 .fact:last-child{border-right:0; padding-left:14px}
+  .s3 .fact small{font-size:10px; color:var(--ink2); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:3px}
+  .s3 .fact b{font-size:14px; font-weight:600}
+  .s3 .sect{font-size:13px; font-weight:600; margin:0 0 10px; display:flex; justify-content:space-between; align-items:baseline}
+  .s3 .sect span{font-size:12px; color:var(--sea); font-weight:500}
+  .s3 .cal{display:flex; gap:6px; margin-bottom:18px}
+  .s3 .cal .c{flex:1; height:56px; border-radius:3px; border:1px solid var(--line); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px}
+  .s3 .cal .c small{font-size:10px; color:var(--ink2); text-transform:uppercase}
+  .s3 .cal .c b{font-size:14px}
+  .s3 .cal .c.on{background:var(--sea); color:#fff; border-color:var(--sea)}
+  .s3 .cal .c.on small{color:rgba(255,255,255,.7)}
+  .s3 .cal .c.off{background:#F0EDE5; color:#9AA39D}
+  .s3 .perk{display:flex; gap:9px; align-items:flex-start; font-size:13px; color:var(--ink); margin-bottom:11px; line-height:1.4}
+  .s3 .dock{position:absolute; left:0; right:0; bottom:0; padding:12px 20px 26px; background:var(--paper); border-top:1px solid var(--line); display:flex; align-items:center; gap:14px; z-index:4}
+  .s3 .dock .p b{font-size:20px; letter-spacing:-.02em}
+  .s3 .dock .p small{font-size:11px; color:var(--ink2); display:block}
+  .s3 .dock .btn{width:auto; flex:1; height:50px; padding:0 18px}
+
+  /* 4 checkout */
+  .s4 .nav{height:48px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex:0 0 auto}
+  .s4 .nav b{font-size:15px; font-weight:600}
+  .s4 .scroll{flex:1; overflow:hidden; padding:4px 20px 0}
+  .s4 .ticket{border:1px solid var(--line); background:#fff; border-radius:3px; overflow:hidden}
+  .s4 .ticket .top{padding:16px}
+  .s4 .ticket .venue{display:flex; gap:12px; align-items:center}
+  .s4 .ticket .venue img{width:52px; height:52px; object-fit:cover; border-radius:2px}
+  .s4 .ticket .venue h3{font-size:15px; font-weight:600}
+  .s4 .ticket .venue p{font-size:12px; color:var(--ink2); margin-top:2px}
+  .s4 .perf{border-top:1px dashed rgba(21,32,27,.2); position:relative; height:0}
+  .s4 .perf:before,.s4 .perf:after{content:""; position:absolute; top:-9px; width:18px; height:18px; border-radius:999px; background:var(--paper); border:1px solid var(--line)}
+  .s4 .perf:before{left:-10px}
+  .s4 .perf:after{right:-10px}
+  .s4 .ticket .bottom{padding:16px}
+  .s4 .date{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px}
+  .s4 .date b{font-family:var(--serif); font-size:24px; font-weight:600; letter-spacing:-.02em; line-height:1}
+  .s4 .date small{font-size:12px; color:var(--ink2); display:block; margin-top:4px}
+  .s4 .timer{text-align:right}
+  .s4 .timer b{font-variant-numeric:tabular-nums; font-size:22px; letter-spacing:-.03em; color:var(--sea)}
+  .s4 .timer small{font-size:10px; color:var(--ink2); text-transform:uppercase; letter-spacing:.06em}
+  .s4 .lines{margin-bottom:6px}
+  .s4 .ln{display:flex; justify-content:space-between; font-size:13px; padding:7px 0; color:var(--ink2)}
+  .s4 .ln b{color:var(--ink); font-weight:500}
+  .s4 .ln.total{border-top:1px solid var(--line); margin-top:6px; padding-top:12px; font-size:15px; color:var(--ink); font-weight:600; align-items:baseline}
+  .s4 .ln.total b{font-size:20px; letter-spacing:-.02em}
+  .s4 .policy{margin-top:16px; font-size:12px; line-height:1.5; color:var(--ink2); border-left:2px solid var(--sea); padding-left:10px}
+  .s4 .pay{margin-top:18px}
+  .s4 .pay h4{font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink2); margin-bottom:9px; font-weight:600}
+  .s4 .pm{display:flex; align-items:center; gap:11px; border:1px solid var(--line); border-radius:3px; padding:12px; margin-bottom:8px; background:#fff}
+  .s4 .pm .r{width:17px; height:17px; border-radius:999px; border:1px solid rgba(21,32,27,.3); margin-left:auto}
+  .s4 .pm.on{border-color:var(--sea); box-shadow:inset 0 0 0 1px var(--sea)}
+  .s4 .pm.on .r{border:5px solid var(--sea)}
+  .s4 .pm b{font-size:13px; font-weight:500}
+  .s4 .pm small{font-size:11px; color:var(--ink2); display:block; margin-top:1px}
+  .s4 .dock{padding:12px 20px 24px; border-top:1px solid var(--line); background:var(--paper); flex:0 0 auto}
+  .s4 .fine{font-size:10px; color:var(--ink2); text-align:center; margin-top:9px; line-height:1.4}
+
+  /* 5 bookings */
+  .s5 .head{padding:4px 20px 0; flex:0 0 auto}
+  .s5 h2{font-size:30px; margin-bottom:4px}
+  .s5 .head p{font-size:13px; color:var(--ink2); margin-bottom:16px}
+  .s5 .seg{display:flex; background:#EDE9DD; border-radius:3px; padding:3px; margin-bottom:16px}
+  .s5 .seg div{flex:1; text-align:center; font-size:12px; font-weight:500; padding:8px 0; border-radius:2px; color:var(--ink2)}
+  .s5 .seg .on{background:#fff; color:var(--ink); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .s5 .scroll{flex:1; overflow:hidden; padding:0 20px}
+  .s5 .next{border:1px solid var(--ink); border-radius:3px; overflow:hidden; margin-bottom:22px; background:#fff}
+  .s5 .next .strip{background:var(--sea); color:#fff; padding:8px 14px; font-size:11px; font-weight:600; display:flex; justify-content:space-between; letter-spacing:.02em}
+  .s5 .next .in{padding:14px}
+  .s5 .next .top{display:flex; gap:12px; align-items:center}
+  .s5 .next img{width:62px; height:62px; border-radius:2px; object-fit:cover}
+  .s5 .next h3{font-size:16px; font-weight:600; margin-bottom:3px}
+  .s5 .next .m{font-size:12px; color:var(--ink2); line-height:1.5}
+  .s5 .next .actions{display:flex; gap:8px; margin-top:13px}
+  .s5 .next .actions .btn{height:40px; font-size:13px; flex:1}
+  .s5 .next .actions .btn.ghost{flex:0 0 44%; background:#F2EFE7; border-color:#F2EFE7}
+  .s5 .h4{font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink2); font-weight:600; margin-bottom:10px}
+  .s5 .item{display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); align-items:center}
+  .s5 .item img{width:46px; height:46px; border-radius:2px; object-fit:cover}
+  .s5 .item .t{flex:1}
+  .s5 .item h4{font-size:14px; font-weight:600; margin-bottom:2px}
+  .s5 .item p{font-size:11px; color:var(--ink2)}
+  .s5 .st{font-size:10px; font-weight:600; letter-spacing:.04em; padding:4px 7px; border-radius:2px; text-transform:uppercase}
+  .s5 .st.ok{background:#E4EDE8; color:#145347}
+  .s5 .st.done{background:#EDEAE1; color:#5D6660}
+  .s5 .st.cx{background:#F4E7E3; color:#97402E}
+  .s5 .support{margin-top:14px; background:#F2EFE7; border-radius:3px; padding:11px 12px}
+  .s5 .support b{font-size:12px; display:block; margin-bottom:2px}
+  .s5 .support span{font-size:11px; color:var(--ink2); line-height:1.45; display:block}
+
+  /* 6 provider */
+  .s6 .head{padding:4px 20px 12px; flex:0 0 auto; display:flex; justify-content:space-between; align-items:flex-start}
+  .s6 .head .eyebrow{margin-bottom:5px}
+  .s6 .head h2{font-size:26px; line-height:1.05}
+  .s6 .bell{position:relative; width:36px; height:36px; border:1px solid var(--line); border-radius:999px; display:flex; align-items:center; justify-content:center; margin-top:4px}
+  .s6 .bell i{position:absolute; top:7px; right:8px; width:6px; height:6px; border-radius:99px; background:#B4552F; border:1.5px solid var(--paper)}
+  .s6 .scroll{flex:1; overflow:hidden; padding:0 20px}
+  .s6 .verif{display:flex; gap:10px; align-items:flex-start; background:#F6EDDC; border-radius:3px; padding:11px 12px; margin-bottom:18px}
+  .s6 .verif b{font-size:12px; display:block; margin-bottom:2px}
+  .s6 .verif p{font-size:11px; color:#6A5637; line-height:1.4}
+  .s6 .verif span{margin-left:auto; font-size:11px; font-weight:600; color:#7A5A22; white-space:nowrap}
+  .s6 .kpi{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px}
+  .s6 .k{border:1px solid var(--line); border-radius:3px; padding:12px 13px; background:#fff}
+  .s6 .k small{font-size:11px; color:var(--ink2); display:block; margin-bottom:6px}
+  .s6 .k b{font-size:28px; letter-spacing:-.03em; font-weight:600; line-height:1}
+  .s6 .k .delta{font-size:10px; color:var(--sea); font-weight:600; margin-top:6px; display:block}
+  .s6 .k .sub{font-size:10px; color:var(--ink2); margin-top:3px; display:block}
+  .s6 .occ{margin:18px 0 8px}
+  .s6 .occ .t{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; font-weight:600; margin-bottom:9px}
+  .s6 .occ .t span{font-size:11px; color:var(--ink2); font-weight:400}
+  .s6 .bars{display:flex; align-items:flex-end; gap:7px; height:82px; border-bottom:1px solid var(--line); padding-bottom:0}
+  .s6 .bars div{flex:1; background:var(--sand); border-radius:1px 1px 0 0; position:relative}
+  .s6 .bars div.hi{background:var(--sea)}
+  .s6 .days{display:flex; gap:7px; margin-top:6px}
+  .s6 .days span{flex:1; text-align:center; font-size:9px; color:var(--ink2); letter-spacing:.02em}
+  .s6 .row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line)}
+  .s6 .row .l{display:flex; gap:10px; align-items:center}
+  .s6 .row h4{font-size:13px; font-weight:600}
+  .s6 .row p{font-size:11px; color:var(--ink2); margin-top:2px}
+  .s6 .row .amt{font-size:13px; font-weight:600; text-align:right}
+  .s6 .row .amt small{display:block; font-size:10px; color:var(--sea); font-weight:600}
+  .s6 .fab{position:absolute; right:18px; bottom:92px; width:52px; height:52px; border-radius:999px; background:var(--ink); color:var(--bone); display:flex; align-items:center; justify-content:center; z-index:6; box-shadow:0 8px 20px rgba(21,32,27,.22)}
+  .credits{margin-top:44px; border-top:1px solid var(--line); padding-top:16px; font-size:11px; color:var(--ink2); line-height:1.6; max-width:1180px}
+</style>
+</head>
+<body>
+<div class="board">
+  <div class="board-head">
+    <div>
+      <h1>Quinta · referencia móvil</h1>
+      <p>Design read: “un cuaderno de apartados junto al mar” — papel hueso, tinta pino, un solo verde agua para la acción. La fecha manda: cada pantalla empieza por el día que se quiere apartar.</p>
+    </div>
+    <p style="text-align:right">VARIANCE 7 · MOTION 4 · DENSITY 4<br>iOS-neutral · Fraunces + Inter · 6 pantallas</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- 1. ONBOARDING -->
+    <div>
+      <div class="frame"><div class="screen s1">
+        <div class="hero"><img src="assets/view-from-an-infinity-pool-overlooking-a.jpg" alt="Alberca frente al mar Caribe, con una palapa al fondo"></div>
+        <div class="scrim"></div>
+        <div class="status" style="color:#F2EFE6"><span>9:41</span><span style="display:flex;align-items:center;gap:4px"><svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="6.5" width="2.6" height="3.5" rx=".6"/><rect x="4" y="4.5" width="2.6" height="5.5" rx=".6"/><rect x="8" y="2.4" width="2.6" height="7.6" rx=".6"/><rect x="12" y=".4" width="2.6" height="9.6" rx=".6"/></svg><svg width="14" height="10" viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 3.4a10.4 10.4 0 0 1 14 0M3.6 6a6.7 6.7 0 0 1 8.8 0M6.3 8.6a2.8 2.8 0 0 1 3.4 0"/><circle cx="8" cy="10.2" r=".7" fill="currentColor" stroke="none"/></svg><svg width="23" height="11" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".8" width="21" height="10.4" rx="2.6" stroke="currentColor" opacity=".42"/><rect x="2.2" y="2.5" width="15.4" height="7" rx="1.4" fill="currentColor"/><path d="M23 4.2v3.6c1.1-.3 1.7-1 1.7-1.8s-.6-1.5-1.7-1.8Z" fill="currentColor" opacity=".45"/></svg></span></div>
+        <div class="mark">
+          <svg class="g" viewBox="0 0 24 24" fill="none"><path d="M12 3c3.6 0 6.5 1.4 8.5 3.1-2.1-.4-4.2-.2-6.2.7 2.4 1.2 4.1 3.2 4.9 5.6-1.9-1.6-4.2-2.4-6.6-2.3 1.6 1.6 2.5 3.7 2.7 6-1.6-1.9-3.7-3.1-6-3.4 1 1.7 1.4 3.7 1.2 5.6-1-2-2.6-3.6-4.6-4.5" stroke="#F2EFE6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b>Quinta</b>
+        </div>
+        <div class="content">
+          <div class="pager"><i></i><i></i><i></i></div>
+          <h2 class="display">La fecha<br>va primero.</h2>
+          <p>Palapas, quintas y salones con disponibilidad real. Aparta tu día y congela el precio, sin llamadas.</p>
+          <div class="btn">Buscar mi fecha</div>
+          <div class="skip">Ya tengo cuenta</div>
+        </div>
+        <div class="home-ind" style="background:rgba(247,244,234,.45)"></div>
+      </div></div>
+      <div class="label"><b>1 · Bienvenida</b><span>onboarding</span></div>
+      <div class="caption">Una sola idea y una acción. La foto es el espacio, no decoración; el degradado sólo protege el texto.</div>
+    </div>
+
+    <!-- 2. HOME / SEARCH -->
+    <div>
+      <div class="frame"><div class="screen s2">
+        <div class="status"><span>9:41</span><span style="display:flex;align-items:center;gap:4px"><svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="6.5" width="2.6" height="3.5" rx=".6"/><rect x="4" y="4.5" width="2.6" height="5.5" rx=".6"/><rect x="8" y="2.4" width="2.6" height="7.6" rx=".6"/><rect x="12" y=".4" width="2.6" height="9.6" rx=".6"/></svg><svg width="14" height="10" viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 3.4a10.4 10.4 0 0 1 14 0M3.6 6a6.7 6.7 0 0 1 8.8 0M6.3 8.6a2.8 2.8 0 0 1 3.4 0"/><circle cx="8" cy="10.2" r=".7" fill="currentColor" stroke="none"/></svg><svg width="23" height="11" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".8" width="21" height="10.4" rx="2.6" stroke="currentColor" opacity=".42"/><rect x="2.2" y="2.5" width="15.4" height="7" rx="1.4" fill="currentColor"/><path d="M23 4.2v3.6c1.1-.3 1.7-1 1.7-1.8s-.6-1.5-1.7-1.8Z" fill="currentColor" opacity=".45"/></svg></span></div>
+        <div class="top">
+          <div class="row1">
+            <div>
+              <div class="place">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" stroke="#0E5F52" stroke-width="2"/><circle cx="12" cy="10" r="2.4" stroke="#0E5F52" stroke-width="2"/></svg>
+                Progreso, Yucatán
+              </div>
+              <h2 class="display">¿Qué vas<br>a celebrar?</h2>
+            </div>
+            <div class="avatar">MC</div>
+          </div>
+          <div class="search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#5D6660" stroke-width="1.8"/><path d="m16.5 16.5 4 4" stroke="#5D6660" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span>Palapa, quinta, salón…</span>
+            <div class="go"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 12h15m-5-5 5 5-5 5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <div class="dates">
+          <div class="d"><small>Vie</small><b>17</b></div>
+          <div class="d on"><small>Sáb</small><b>18</b></div>
+          <div class="d"><small>Dom</small><b>19</b></div>
+          <div class="d"><small>Vie</small><b>24</b></div>
+          <div class="d"><small>Sáb</small><b>25</b></div>
+
+        </div>
+        <div class="filters">
+          <div class="chip on">Todos</div>
+          <div class="chip">Palapa</div>
+          <div class="chip">Salón</div>
+          <div class="chip">Quinta</div>
+        </div>
+        <div class="list">
+          <div class="vcard">
+            <div class="media">
+              <img src="assets/palm-leaves-palapa-beach-umbrella-eagle-beach.jpg" alt="Palapa de palma frente al mar">
+              <div class="tag sp">Patrocinado</div>
+              <div class="fav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.4-7-9.4A4.1 4.1 0 0 1 12 7a4.1 4.1 0 0 1 7 3.6c0 5-7 9.4-7 9.4Z" stroke="#15201B" stroke-width="1.6"/></svg></div>
+            </div>
+            <div class="vinfo">
+              <div>
+                <h3>Palapa Xcambó</h3>
+                <div class="meta">Telchac Puerto · 120 personas · Palapa</div>
+                <div class="avail">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="#0E5F52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Libre el 18 de oct
+                </div>
+              </div>
+              <div class="score">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#B4771F"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9Z"/></svg>
+                4.9 <span style="color:#5D6660;font-weight:400">(38)</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:4px">
+              <div class="meta">Desde</div>
+              <div class="price"><b>$8,400</b> por día</div>
+            </div>
+          </div>
+          <div class="sect"><h4>También libres el 18</h4><span>24 espacios</span></div>
+          <div class="rowcard">
+            <img src="assets/riversdale-estate-garden-urns-and-pathway-with.jpg" alt="Jardín de una quinta con macetones y camino de piedra">
+            <div class="t">
+              <h5>Quinta Alcántara</h5>
+              <p>Querétaro, Qro. · 250 personas<br>Reserva inmediata</p>
+            </div>
+            <div class="pr">$22,000<small>por día</small></div>
+          </div>
+          <div class="all">Ver los 24 espacios del 18 de oct</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" stroke="#0E5F52" stroke-width="1.7" stroke-linejoin="round"/></svg>Explorar</div>
+          <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="#5D6660" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="#5D6660" stroke-width="1.7"/></svg>Reservas</div>
+          <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M20.5 11.5a8.5 8.5 0 1 1-3.7-7L21 4l-.6 4.3" stroke="#5D6660" stroke-width="1.7" stroke-linecap="round"/></svg>Mensajes</div>
+          <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.6" stroke="#5D6660" stroke-width="1.7"/><path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.9 7 5.5" stroke="#5D6660" stroke-width="1.7" stroke-linecap="round"/></svg>Perfil</div>
+        </div>
+      </div></div>
+      <div class="label"><b>2 · Explorar</b><span>búsqueda</span></div>
+      <div class="caption">La fecha vive arriba, no en un filtro escondido. Cada tarjeta responde “¿está libre mi día?” antes que el precio.</div>
+    </div>
+
+    <!-- 3. VENUE DETAIL -->
+    <div>
+      <div class="frame"><div class="screen s3">
+        <div class="cover">
+          <img src="assets/night-palapa-beach-umbrellas-eagle-beach-noord.jpg" alt="Palapas iluminadas de noche junto al mar">
+          <div class="scrim"></div>
+          <div class="back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m14.5 5-7 7 7 7" stroke="#15201B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="count">1 / 24</div>
+        </div>
+        <div class="status" style="position:absolute;top:0;left:0;right:0;color:#F7F4EA">9:41<span style="display:flex;align-items:center;gap:4px"><svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="6.5" width="2.6" height="3.5" rx=".6"/><rect x="4" y="4.5" width="2.6" height="5.5" rx=".6"/><rect x="8" y="2.4" width="2.6" height="7.6" rx=".6"/><rect x="12" y=".4" width="2.6" height="9.6" rx=".6"/></svg><svg width="14" height="10" viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 3.4a10.4 10.4 0 0 1 14 0M3.6 6a6.7 6.7 0 0 1 8.8 0M6.3 8.6a2.8 2.8 0 0 1 3.4 0"/><circle cx="8" cy="10.2" r=".7" fill="currentColor" stroke="none"/></svg><svg width="23" height="11" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".8" width="21" height="10.4" rx="2.6" stroke="currentColor" opacity=".42"/><rect x="2.2" y="2.5" width="15.4" height="7" rx="1.4" fill="currentColor"/><path d="M23 4.2v3.6c1.1-.3 1.7-1 1.7-1.8s-.6-1.5-1.7-1.8Z" fill="currentColor" opacity=".45"/></svg></span></div>
+        <div class="body">
+          <div class="kicker"><b>Palapa</b> · Telchac Puerto, Yucatán</div>
+          <h2 class="display">Palapa Xcambó</h2>
+          <div class="sub">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#B4771F"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9Z"/></svg>
+            <b style="color:#15201B">4.9</b> · 38 reseñas · 2 min del mar
+          </div>
+          <div class="facts">
+            <div class="fact"><small>Capacidad</small><b>hasta 120</b></div>
+            <div class="fact"><small>Día completo</small><b>$8,400</b></div>
+            <div class="fact"><small>Anticipo</small><b>30%</b></div>
+          </div>
+          <div class="sect">Octubre 2026 <span>Ver mes</span></div>
+          <div class="cal">
+            <div class="c off"><small>Jue</small><b>15</b></div>
+            <div class="c off"><small>Vie</small><b>16</b></div>
+            <div class="c on"><small>Sáb</small><b>17</b></div>
+            <div class="c"><small>Dom</small><b>18</b></div>
+            <div class="c"><small>Vie</small><b>23</b></div>
+            <div class="c off"><small>Sáb</small><b>24</b></div>
+          </div>
+          <div class="sect">Lo que incluye</div>
+          <div class="perk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-top:2px;flex:0 0 14px"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="#0E5F52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Palapa de 12×8 m, piso de concreto pulido y luz cálida</div>
+          <div class="perk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-top:2px;flex:0 0 14px"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="#0E5F52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>50 sillas, 6 mesas redondas y área de cocina fría</div>
+          <div class="perk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-top:2px;flex:0 0 14px"><path d="m5 12.5 4.5 4.5L19 7.5" stroke="#0E5F52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Limpieza incluida; montaje desde las 14:00</div>
+        </div>
+        <div class="dock">
+          <div class="p"><b>$8,400</b><small>por día · 12 h</small></div>
+          <div class="btn">Apartar el 17 de oct</div>
+        </div>
+        <div class="home-ind"></div>
+      </div></div>
+      <div class="label"><b>3 · Detalle</b><span>venue</span></div>
+      <div class="caption">La disponibilidad es el bloque principal, no una pestaña. El CTA nombra la fecha: no hay dos reservas iguales.</div>
+    </div>
+
+    <!-- 4. CHECKOUT -->
+    <div>
+      <div class="frame"><div class="screen s4">
+        <div class="status"><span>9:41</span><span style="display:flex;align-items:center;gap:4px"><svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="6.5" width="2.6" height="3.5" rx=".6"/><rect x="4" y="4.5" width="2.6" height="5.5" rx=".6"/><rect x="8" y="2.4" width="2.6" height="7.6" rx=".6"/><rect x="12" y=".4" width="2.6" height="9.6" rx=".6"/></svg><svg width="14" height="10" viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 3.4a10.4 10.4 0 0 1 14 0M3.6 6a6.7 6.7 0 0 1 8.8 0M6.3 8.6a2.8 2.8 0 0 1 3.4 0"/><circle cx="8" cy="10.2" r=".7" fill="currentColor" stroke="none"/></svg><svg width="23" height="11" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".8" width="21" height="10.4" rx="2.6" stroke="currentColor" opacity=".42"/><rect x="2.2" y="2.5" width="15.4" height="7" rx="1.4" fill="currentColor"/><path d="M23 4.2v3.6c1.1-.3 1.7-1 1.7-1.8s-.6-1.5-1.7-1.8Z" fill="currentColor" opacity=".45"/></svg></span></div>
+        <div class="nav">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m14.5 5-7 7 7 7" stroke="#15201B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b>Apartar</b>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#5D6660" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div class="scroll">
+          <div class="ticket">
+            <div class="top">
+              <div class="venue">
+                <img src="assets/night-palapa-beach-umbrellas-eagle-beach-noord.jpg" alt="Palapa Xcambó de noche">
+                <div>
+                  <h3>Palapa Xcambó</h3>
+                  <p>Telchac Puerto · Anfitrión verificado</p>
+                </div>
+              </div>
+              <div class="date" style="margin-top:16px;margin-bottom:0">
+                <div>
+                  <b>Sáb 17 oct</b>
+                  <small>15:00 → 02:00 · 11 h</small>
+                </div>
+                <div class="timer"><b>14:52</b><small>para pagar</small></div>
+              </div>
+            </div>
+            <div class="perf"></div>
+            <div class="bottom">
+              <div class="lines">
+                <div class="ln"><span>Renta del espacio</span><b>$8,400.00</b></div>
+                <div class="ln"><span>Limpieza y montaje</span><b>$650.00</b></div>
+                <div class="ln"><span>Depósito de garantía (reembolsable)</span><b>$2,000.00</b></div>
+                <div class="ln"><span>Comisión de servicio</span><b>$612.50</b></div>
+                <div class="ln total"><span>Total hoy</span><b>$11,662.50</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="policy">Cancelación escalonada: 100% hasta 30 días antes, 50% entre 7 y 30 días. Después de 7 días no hay reembolso. <b style="color:#15201B">El precio queda congelado mientras el apartado esté activo.</b></div>
+          <div class="pay">
+            <h4>Pago</h4>
+            <div class="pm on">
+              <svg width="22" height="16" viewBox="0 0 24 18" fill="none"><rect x="1" y="1" width="22" height="16" rx="2.5" stroke="#0E5F52" stroke-width="1.4"/><path d="M1 6h22" stroke="#0E5F52" stroke-width="1.4"/></svg>
+              <div><b>Tarjeta terminación 4421</b><small>Visa · cobro seguro con Stripe</small></div>
+              <div class="r"></div>
+            </div>
+            <div class="pm">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="#5D6660" stroke-width="1.5"/><path d="M3 10h18" stroke="#5D6660" stroke-width="1.5"/><circle cx="8" cy="14" r="1.4" fill="#5D6660"/></svg>
+              <div><b>Transferencia SPEI</b><small>El apartado se libera al confirmar</small></div>
+              <div class="r"></div>
+            </div>
+          </div>
+        </div>
+        <div class="dock">
+          <div class="btn">Pagar $11,662.50 y apartar</div>
+          <div class="fine">Al pagar aceptas el contrato de apartado y la política de cancelación.</div>
+        </div>
+        <div class="home-ind"></div>
+      </div></div>
+      <div class="label"><b>4 · Apartado</b><span>checkout</span></div>
+      <div class="caption">El recibo es el objeto central: folio, fecha, desglose y un reloj real. El depósito de garantía se muestra aparte del total.</div>
+    </div>
+
+    <!-- 5. MY BOOKINGS -->
+    <div>
+      <div class="frame"><div class="screen s5">
+        <div class="status"><span>9:41</span><span style="display:flex;align-items:center;gap:4px"><svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="6.5" width="2.6" height="3.5" rx=".6"/><rect x="4" y="4.5" width="2.6" height="5.5" rx=".6"/><rect x="8" y="2.4" width="2.6" height="7.6" rx=".6"/><rect x="12" y=".4" width="2.6" height="9.6" rx=".6"/></svg><svg width="14" height="10" viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 3.4a10.4 10.4 0 0 1 14 0M3.6 6a6.7 6.7 0 0 1 8.8 0M6.3 8.6a2.8 2.8 0 0 1 3.4 0"/><circle cx="8" cy="10.2" r=".7" fill="currentColor" stroke="none"/></svg><svg width="23" height="11" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".8" width="21" height="10.4" rx="2.6" stroke="currentColor" opacity=".42"/><rect x="2.2" y="2.5" width="15.4" height="7" rx="1.4" fill="currentColor"/><path d="M23 4.2v3.6c1.1-.3 1.7-1 1.7-1.8s-.6-1.5-1.7-1.8Z" fill="currentColor" opacity=".45"/></svg></span></div>
+        <div class="head">
+          <h2 class="display">Mis reservas</h2>
+          <p>Todo lo que ya apartaste, en un solo lugar.</p>
+          <div class="seg"><div class="on">Próximas</div><div>Pasadas</div><div>Canceladas</div></div>
+        </div>
+        <div class="scroll">
+          <div class="next">
+            <div class="strip"><span>FALTAN 12 DÍAS</span><span>QX-4F2A91</span></div>
+            <div class="in">
+              <div class="top">
+                <img src="assets/night-palapa-beach-umbrellas-eagle-beach-noord.jpg" alt="Palapa Xcambó">
+                <div>
+                  <h3>Palapa Xcambó</h3>
+                  <div class="m">Sáb 17 oct · 15:00 → 02:00<br>120 invitados · Saldo $8,662.50</div>
+                </div>
+              </div>
+              <div class="actions">
+                <div class="btn ghost">Ver contrato</div>
+                <div class="btn">Pagar saldo</div>
+              </div>
+            </div>
+          </div>
+          <div class="h4">Historial</div>
+          <div class="item">
+            <img src="assets/riversdale-estate-garden-urns-and-pathway-with.jpg" alt="Quinta Alcántara">
+            <div class="t">
+              <h4>Quinta Alcántara</h4>
+              <p>Sáb 22 ago · 80 invitados</p>
+            </div>
+            <div class="st done">Completada</div>
+          </div>
+          <div class="item">
+            <img src="assets/dz6-0943-a-brightly-lit-mobile-bar.jpg" alt="Salón Casa Nube">
+            <div class="t">
+              <h4>Salón Casa Nube</h4>
+              <p>Vie 5 jun · 150 invitados</p>
+            </div>
+            <div class="st ok">Reseñar</div>
+          </div>
+          <div class="item">
+            <img src="assets/view-from-an-infinity-pool-overlooking-a.jpg" alt="Quinta Los Arcos">
+            <div class="t">
+              <h4>Quinta Los Arcos</h4>
+              <p>Dom 14 dic 2025 · 60 invitados</p>
+            </div>
+            <div class="st done">Completada</div>
+          </div>
+          <div class="support">
+            <b>¿Cambio de fecha?</b>
+            <span>Habla con el anfitrión antes del 10 de oct para conservar tu anticipo.</span>
+          </div>
+          <div class="item" style="border-bottom:0">
+            <img src="assets/palm-leaves-palapa-beach-umbrella-eagle-beach.jpg" alt="Palapa El Faro">
+            <div class="t">
+              <h4>Palapa El Faro</h4>
+              <p>Sáb 18 abr · Cancelada por ti</p>
+            </div>
+            <div class="st cx">Reembolsada</div>
+          </div>
+        </div>
+        <div class="tabbar" style="border-top:0">
+          <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" stroke="#5D6660" stroke-width="1.7" stroke-linejoin="round"/></svg>Explorar</div>
+          <div class="tab on"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="#0E5F52" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="#0E5F52" stroke-width="1.7"/></svg>Reservas</div>
+          <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M20.5 11.5a8.5 8.5 0 1 1-3.7-7L21 4l-.6 4.3" stroke="#5D6660" stroke-width="1.7" stroke-linecap="round"/></svg>Mensajes</div>
+          <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.6" stroke="#5D6660" stroke-width="1.7"/><path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.9 7 5.5" stroke="#5D6660" stroke-width="1.7" stroke-linecap="round"/></svg>Perfil</div>
+        </div>
+        <div class="home-ind"></div>
+      </div></div>
+      <div class="label"><b>5 · Mis reservas</b><span>cliente</span></div>
+      <div class="caption">La próxima reserva se lee como un pase: folio, cuenta regresiva y la siguiente acción. Sin tarjetas idénticas en fila.</div>
+    </div>
+
+    <!-- 6. PROVIDER DASHBOARD -->
+    <div>
+      <div class="frame"><div class="screen s6">
+        <div class="status"><span>9:41</span><span style="display:flex;align-items:center;gap:4px"><svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="6.5" width="2.6" height="3.5" rx=".6"/><rect x="4" y="4.5" width="2.6" height="5.5" rx=".6"/><rect x="8" y="2.4" width="2.6" height="7.6" rx=".6"/><rect x="12" y=".4" width="2.6" height="9.6" rx=".6"/></svg><svg width="14" height="10" viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 3.4a10.4 10.4 0 0 1 14 0M3.6 6a6.7 6.7 0 0 1 8.8 0M6.3 8.6a2.8 2.8 0 0 1 3.4 0"/><circle cx="8" cy="10.2" r=".7" fill="currentColor" stroke="none"/></svg><svg width="23" height="11" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".8" width="21" height="10.4" rx="2.6" stroke="currentColor" opacity=".42"/><rect x="2.2" y="2.5" width="15.4" height="7" rx="1.4" fill="currentColor"/><path d="M23 4.2v3.6c1.1-.3 1.7-1 1.7-1.8s-.6-1.5-1.7-1.8Z" fill="currentColor" opacity=".45"/></svg></span></div>
+        <div class="head">
+          <div>
+            <div class="eyebrow">Panel · Palapa Xcambó</div>
+            <h2 class="display">Octubre<br>va lleno.</h2>
+          </div>
+          <div class="bell">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9Z" stroke="#15201B" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 18a2 2 0 0 0 4 0" stroke="#15201B" stroke-width="1.6"/></svg>
+            <i></i>
+          </div>
+        </div>
+        <div class="scroll">
+          <div class="verif">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex:0 0 16px;margin-top:1px"><path d="M12 3 4 6v6c0 4.5 3.4 7.8 8 9 4.6-1.2 8-4.5 8-9V6l-8-3Z" stroke="#7A5A22" stroke-width="1.6"/><path d="M12 8v4.5" stroke="#7A5A22" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="15.6" r="1" fill="#7A5A22"/></svg>
+            <div><b>Falta tu constancia de situación fiscal</b><p>Sin ella no puedes recibir pagos. Vence el 24 de oct.</p></div>
+            <span>Subir</span>
+          </div>
+          <div class="kpi">
+            <div class="k"><small>Ocupación de octubre</small><b>78%</b><span class="delta">+12 pts vs. sept.</span></div>
+            <div class="k"><small>Ingreso del mes</small><b>$84.2k</b><span class="sub">6 reservas confirmadas</span></div>
+          </div>
+          <div class="occ">
+            <div class="t">Fechas apartadas <span>17–25 oct</span></div>
+            <div class="bars">
+              <div style="height:38%"></div><div style="height:54%"></div><div class="hi" style="height:92%"></div>
+              <div class="hi" style="height:78%"></div><div style="height:46%"></div><div class="hi" style="height:100%"></div>
+              <div style="height:62%"></div>
+            </div>
+            <div class="days"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+          </div>
+          <div class="h4" style="margin-top:20px">Próximos eventos</div>
+          <div class="row">
+            <div class="l">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="#0E5F52" stroke-width="1.5"/><path d="M3.5 9.5h17" stroke="#0E5F52" stroke-width="1.5"/></svg>
+              <div><h4>XV años · familia Pech</h4><p>Sáb 17 oct · 120 personas</p></div>
+            </div>
+            <div class="amt">$11,662<small>Pagado</small></div>
+          </div>
+          <div class="row">
+            <div class="l">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="#5D6660" stroke-width="1.5"/><path d="M3.5 9.5h17" stroke="#5D6660" stroke-width="1.5"/></svg>
+              <div><h4>Boda · M. y J. Uc</h4><p>Sáb 24 oct · 90 personas</p></div>
+            </div>
+            <div class="amt">$14,300<small>Anticipo</small></div>
+          </div>
+          <div class="row" style="border-bottom:0">
+            <div class="l">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="#5D6660" stroke-width="1.5"/><path d="M3.5 9.5h17" stroke="#5D6660" stroke-width="1.5"/></svg>
+              <div><h4>Cumpleaños · R. Coss</h4><p>Dom 25 oct · 60 personas</p></div>
+            </div>
+            <div class="amt">$9,800<small>Anticipo</small></div>
+          </div>
+        </div>
+        <div class="fab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#F2EFE6" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="tabbar" style="border-top:1px solid var(--line)">
+          <div class="tab on"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#0E5F52" stroke-width="1.7"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#0E5F52" stroke-width="1.7"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#0E5F52" stroke-width="1.7"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#0E5F52" stroke-width="1.7"/></svg>Panel</div>
+          <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="#5D6660" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="#5D6660" stroke-width="1.7"/></svg>Agenda</div>
+          <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 19V9m5 10V4m5 15v-7m5 7V6" stroke="#5D6660" stroke-width="1.7" stroke-linecap="round"/></svg>Ingresos</div>
+          <div class="tab"><svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.6" stroke="#5D6660" stroke-width="1.7"/><path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.9 7 5.5" stroke="#5D6660" stroke-width="1.7" stroke-linecap="round"/></svg>Perfil</div>
+        </div>
+        <div class="home-ind"></div>
+      </div></div>
+      <div class="label"><b>6 · Panel proveedor</b><span>dashboard</span></div>
+      <div class="caption">Números reales, no gráficas decorativas: ocupación con días marcados y la próxima cobranza. El bloqueo de verificación es visible antes de que duela.</div>
+    </div>
+
+  </div>
+
+  <div class="credits">
+    <b>Créditos de imagen (referencia de diseño, no del producto):</b>
+    “Palm Leaves Palapa Beach Umbrella Eagle Beach Noord Aruba” y “Night Palapa Beach Umbrellas Eagle Beach Noord Aruba”, EgorovaSvetlana, CC BY-SA 4.0, Wikimedia Commons ·
+    “DZ6 0943 A brightly lit mobile bar…”, PattayaPatrol, CC BY-SA 4.0, Wikimedia Commons ·
+    “Riversdale Estate garden urns…”, Riversdale Estate, CC BY 2.0, Wikimedia Commons ·
+    “View from an infinity pool…”, Jeffrey Paul, CC0, WordPress Photo Directory.
+    Estas fotos ilustran el mundo del producto; en producción se sustituyen por fotografía de los venues.
+  </div>
+</div>
+</body>
+</html>
+
+

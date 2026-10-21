@@ -1,0 +1,129 @@
+"""Infra local: Postgres+PostGIS, Redis, MinIO (S3) y Mailhog."""
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: quinta-db
+    environment:
+      POSTGRES_USER: quinta
+      POSTGRES_PASSWORD: quinta
+      POSTGRES_DB: quinta
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports: ["5432:5432"]
+    volumes:
+      - quinta-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quinta -d quinta"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - max_connections=200
+      - -c
+      - log_min_duration_statement=500
+
+  redis:
+    image: redis:7-alpine
+    container_name: quinta-redis
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "allkeys-lru"]
+    ports: ["6379:6379"]
+    volumes:
+      - quinta-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  minio:
+    image: minio/minio:latest
+    container_name: quinta-minio
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports: ["9000:9000", "9001:9001"]
+    volumes:
+      - quinta-minio:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minio minio123 &&
+      mc mb --ignore-existing local/quinta-media &&
+      mc anonymous set download local/quinta-media &&
+      echo 'bucket listo'
+      "
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: quinta-mailhog
+    ports: ["1025:1025", "8025:8025"]
+
+  api:
+    build:
+      context: .
+      target: runtime
+    container_name: quinta-api
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://quinta:quinta@db:5432/quinta
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      S3_ENDPOINT_URL: http://minio:9000
+    ports: ["8000:8000"]
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    volumes:
+      - ./app:/app/app:ro
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"
+
+  worker:
+    build:
+      context: .
+      target: runtime
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://quinta:quinta@db:5432/quinta
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      api: {condition: service_started}
+    command: celery -A app.tasks.celery_app worker -l info -Q default,payments,notifications -c 4
+
+  beat:
+    build:
+      context: .
+      target: runtime
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://quinta:quinta@db:5432/quinta
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      worker: {condition: service_started}
+    command: celery -A app.tasks.celery_app beat -l info
+
+volumes:
+  quinta-pgdata:
+  quinta-redis:
+  quinta-minio:

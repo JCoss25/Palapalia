@@ -1,0 +1,80 @@
+# Flujo crítico de reserva: buscar → apartar → pagar → ver reserva.
+# Se ejecuta con `maestro test e2e/maestro/booking_flow.yaml` (requiere la app instalada).
+appId: mx.quinta.app
+name: Flujo de reserva completo
+tags:
+  - critical
+env:
+  EMAIL: mariana@example.com
+  PASSWORD: Palapa2026!
+---
+- launchApp:
+    clearState: true
+
+# 1 · Bienvenida
+- assertVisible: 'La fecha va primero.'
+- tapOn:
+    id: 'onboarding-cta'
+- assertVisible: '¿Qué vas a celebrar?'
+
+# 2 · Buscar por fecha
+- tapOn: 'SÁB'
+- assertVisible: 'Palapa Xcambó'
+- assertVisible: 'Patrocinado'
+- tapOn: 'Palapa Xcambó'
+
+# 3 · Detalle: la disponibilidad manda
+- assertVisible: 'Disponibilidad'
+- assertVisible: 'Lo que incluye'
+- tapOn: '80 invitados'
+- assertVisible:
+    text: 'Apartar el .*'
+- tapOn:
+    id: 'venue-hold-cta'
+
+# 4 · Apartado con folio y cuenta regresiva
+- assertVisible: 'Apartar'
+- assertVisible:
+    text: 'Folio HD-.*'
+- assertVisible: 'Total hoy'
+- assertVisible: 'para pagar'
+- tapOn: 'Transferencia SPEI'
+- tapOn:
+    id: 'checkout-pay'
+
+# 5 · Mis reservas: el pase con la siguiente acción
+- assertVisible: 'Mis reservas'
+- assertVisible:
+    text: 'QX-.*'
+- assertVisible: 'Próximas'
+
+---
+# Caso de error: el slot se ocupa mientras el usuario paga.
+appId: mx.quinta.app
+name: Conflicto de disponibilidad se explica sin romper la app
+tags:
+  - edge-case
+---
+- launchApp
+- tapOn: 'Palapa Xcambó'
+- tapOn:
+    id: 'venue-hold-cta'
+# Simula el 409 del servidor (respuesta pregrabada en el mock del entorno de pruebas)
+- assertVisible: 'Se ocupó hace un momento'
+- assertVisible: 'Elegir otro día'
+- tapOn: 'Elegir otro día'
+
+---
+# Caso de error: apartado vencido.
+appId: mx.quinta.app
+name: Apartado vencido ofrece volver a apartar
+tags:
+  - edge-case
+---
+- launchApp
+- tapOn: 'Palapa Xcambó'
+- tapOn:
+    id: 'venue-hold-cta'
+- assertVisible: 'Tu apartado venció'
+- assertVisible: 'Volver a apartar'
+- tapOn: 'Volver a apartar'

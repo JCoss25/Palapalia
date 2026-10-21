@@ -1,0 +1,62 @@
+# Entorno
+.env
+.env.*
+!.env.example
+*.local
+
+# Artefactos de build (se regeneran con npm run build / build:single)
+dist/
+dist-single/
+web/screenshots/
+*.lnk
+
+# Skills de terceros: se reinstalan con `npx skills add …` (ver skills-lock.json)
+.agents/skills/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+dist/
+build/
+*.egg-info/
+
+# Node / Expo
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+
+# Secretos y credenciales
+*.pem
+*.p12
+*.jks
+google-services.json
+GoogleService-Info.plist
+credentials.json
+
+# Datos locales
+*.sqlite3
+*.db
+quinta-pgdata/
+
+# Editores y sistema
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Diseño (fuera del control de versiones salvo el board y sus assets)
+.taste-skill/

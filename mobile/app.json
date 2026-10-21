@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Quinta",
+    "slug": "quinta",
+    "scheme": "quinta",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "backgroundColor": "#0B1713",
+      "resizeMode": "cover"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "mx.quinta.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Para mostrarte los espacios cerca de ti y verificar el check-in en el lugar.",
+        "NSCameraUsageDescription": "Para que subas fotos de tu espacio y evidencia de daños con la cámara.",
+        "NSPhotoLibraryUsageDescription": "Para que elijas las fotos de tu espacio desde tu galería."
+      }
+    },
+    "android": {
+      "package": "mx.quinta.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#EFEBDF"
+      },
+      "permissions": ["ACCESS_FINE_LOCATION", "CAMERA", "READ_MEDIA_IMAGES"],
+      "config": {
+        "googleMaps": { "apiKey": "${GOOGLE_MAPS_API_KEY}" }
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "ios": { "deploymentTarget": "15.1" },
+          "android": { "minSdkVersion": 24 }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "${API_URL}",
+      "eas": { "projectId": "00000000-0000-0000-0000-000000000000" }
+    }
+  }
+}
