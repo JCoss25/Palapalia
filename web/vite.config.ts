@@ -1,7 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+/**
+ * `BASE_PATH` permite publicar en un subdirectorio (GitHub Pages sirve los proyectos en
+ * `/<repo>/`). Sin esto, los assets se piden en `/assets/...` y el sitio queda en blanco.
+ */
+const base = process.env.BASE_PATH ?? '/';
+
 export default defineConfig({
+  base,
   plugins: [react()],
   server: {
     // Puerto propio: en esta máquina hay otros proyectos usando 5173 y 4173.

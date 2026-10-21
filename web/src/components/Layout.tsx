@@ -73,9 +73,9 @@ export function Header({ demo }: { demo: boolean }) {
             className="wordmark"
             href={href('/')}
             onClick={(event) => onLinkClick(event, '/')}
-            aria-label="Quinta, inicio"
+            aria-label="Palapalia, inicio"
           >
-            Quinta
+            Palapalia
           </a>
           <nav className="nav" aria-label="Navegación principal">
             <a href={href('/')} onClick={(event) => onLinkClick(event, '/')}>
@@ -115,7 +115,7 @@ export function Footer() {
   return (
     <footer className="footer">
       <div className="wrap">
-        <p className="footer-name">Quinta</p>
+        <p className="footer-name">Palapalia</p>
         <div className="footer-grid" style={{ marginTop: 'var(--s-7)' }}>
           <div className="stack" style={{ gap: 'var(--s-3)' }}>
             <p className="body-soft" style={{ maxWidth: '38ch' }}>

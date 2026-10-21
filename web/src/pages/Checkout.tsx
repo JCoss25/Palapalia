@@ -174,7 +174,7 @@ export function CheckoutPage({
             </strong>
             <p>
               {method === 'cash'
-                ? 'Sin comisión de servicio, pero sin protección de pago de Quinta. El contrato sigue vigente.'
+                ? 'Sin comisión de servicio, pero sin protección de pago de Palapalia. El contrato sigue vigente.'
                 : `El saldo de ${quote ? money(quote.totalCents - quote.depositCents) : '—'} se cobra antes del evento y te avisamos por correo.`}
             </p>
           </div>
@@ -274,7 +274,7 @@ export function CheckoutPage({
               />
               <MethodRow
                 label="Pago directo al anfitrión"
-                detail="Sin comisión de servicio, sin protección de pago de Quinta."
+                detail="Sin comisión de servicio, sin protección de pago de Palapalia."
                 selected={method === 'cash'}
                 onSelect={() => setMethod('cash')}
               />

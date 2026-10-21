@@ -9,7 +9,7 @@ export function PolicyPage() {
         <h1 className="display display-lg">Política de cancelación</h1>
         <div className="stack-lg" style={{ marginTop: 'var(--s-6)' }}>
           <p className="lead">
-            La política es la misma para todos los espacios de Quinta, y se te muestra antes de pagar con el
+            La política es la misma para todos los espacios de Palapalia, y se te muestra antes de pagar con el
             cálculo hecho sobre tu fecha.
           </p>
           <div className="stack">
@@ -56,7 +56,7 @@ export function ApiPage() {
   return (
     <main id="contenido" className="section-tight">
       <div className="wrap" style={{ maxWidth: '68ch' }}>
-        <h1 className="display display-lg">La API de Quinta</h1>
+        <h1 className="display display-lg">La API de Palapalia</h1>
         <div className="stack-lg" style={{ marginTop: 'var(--s-6)' }}>
           <p className="lead">
             Esta web es un cliente más: habla con el mismo backend FastAPI que la app móvil, con el mismo

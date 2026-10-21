@@ -34,7 +34,10 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
+      # GitHub Pages publica el proyecto en /<repo>/: el build necesita ese prefijo.
       - run: npm run build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
 
       # Pages sirve el build estático. El ruteo de la app es por hash, así que no hacen falta
       # reglas de rewrite ni un fallback a index.html.

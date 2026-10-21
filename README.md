@@ -1,11 +1,11 @@
-# Quinta — marketplace de palapas, quintas y salones para eventos
+﻿# Palapalia — marketplace de palapas, quintas y salones para eventos
 
-Monorepo del producto **Quinta**: reserva de espacios para eventos (palapas, salones de fiestas,
+Monorepo del producto **Palapalia**: reserva de espacios para eventos (palapas, salones de fiestas,
 quintas, jardines y terrazas) con disponibilidad real, apartado con precio congelado, pagos con
 split a proveedores, reseñas verificadas y mensajería.
 
 ```
-palapa-market/
+palapalia/
 ├─ docs/            especificación completa (empezar por docs/00-INDICE.md)
 ├─ backend/         FastAPI + SQLAlchemy 2.0 async + PostgreSQL/PostGIS + Celery
 ├─ web/             App web (Vite + React + TypeScript) — la que se abre en el navegador
@@ -86,3 +86,4 @@ cd ../mobile && npm install && npx expo start
 - **Errores**: `{"error": {"code", "message", "details", "request_id"}}` con códigos estables.
 - **Escrituras críticas**: `Idempotency-Key` obligatorio (bookings, payments, refunds, payouts).
 - **Nada se borra**: `deleted_at` + `AuditLog`; retención fiscal aparte de la anonimización.
+
